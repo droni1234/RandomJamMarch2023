@@ -11,11 +11,14 @@ public abstract class Enemy : MonoBehaviour
     public GameObject Player;
     public float radius = 5f;
     public float angle = 180f;
+    public int numSegments = 16;
+    private Mesh mesh;
 
 
     private void Update()
     {
         checkForPlayer();
+        
     }
 
     public virtual void InflictDamage(int damage)
@@ -43,5 +46,15 @@ public abstract class Enemy : MonoBehaviour
         }
     }
 
-    
+
+    public Vector2 DirFromAngle(float angleDeg, bool global)
+    {
+        if (!global)
+        {
+            angleDeg += transform.eulerAngles.z;
+        }
+        return new Vector2(Mathf.Cos(angleDeg * Mathf.Deg2Rad), Mathf.Sin(angleDeg * Mathf.Deg2Rad));
+    }
+
+
 }
