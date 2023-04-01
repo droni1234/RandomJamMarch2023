@@ -12,18 +12,18 @@ public class FOVConeMesh : MonoBehaviour
     [HideInInspector] public int[] triangles;
     [HideInInspector] public int stepCount;
     public LayerMask obstacleMask, playerMask;
+    Quaternion rotation = Quaternion.Euler(0f, 45f, 0f);
 
     // Start is called before the first frame update
     void Start()
     {
         mesh = GetComponent<MeshFilter>().mesh;
         enemy = GetComponentInParent<Enemy>();
-        
-        transform.rotation = enemy.transform.rotation;
+        transform.localRotation = enemy.transform.rotation;
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    void Update()
     {
         MakeMesh();
     }
@@ -38,7 +38,7 @@ public class FOVConeMesh : MonoBehaviour
         hit = new RaycastHit2D();
         for (int i = 0; i < stepCount; i++)
         {
-            float angle = enemy.transform.eulerAngles.y - enemy.angle / 2 + stepAngle * i;
+            float angle = enemy.transform.eulerAngles.x - enemy.angle / 2 + stepAngle * i;
             Vector3 dir = enemy.DirFromAngle(angle, false);
             hit = Physics2D.Raycast(enemy.transform.position, dir, enemy.radius, obstacleMask);
             if (hit.collider == null)
@@ -54,7 +54,7 @@ public class FOVConeMesh : MonoBehaviour
         vertices = new Vector3[vertexCount];
         triangles = new int[(vertexCount - 2) * 3];
 
-        vertices[0] = Vector3.zero;
+        vertices[0] = new Vector3(0,0,0f);
 
         for (int i = 0; i < vertexCount - 1; i++)
         {
@@ -73,5 +73,7 @@ public class FOVConeMesh : MonoBehaviour
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
 
+   
+        
     }
 }

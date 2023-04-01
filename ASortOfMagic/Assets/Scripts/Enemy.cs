@@ -38,8 +38,9 @@ public abstract class Enemy : MonoBehaviour
 
     void checkForPlayer()
     {
+        
         Vector2 directionToPlayer = Player.transform.position - transform.position;
-        float angleToPlayer = Vector2.Angle(Vector2.up, directionToPlayer);
+        float angleToPlayer = Vector2.Angle(transform.right, directionToPlayer);
         if (directionToPlayer.magnitude <= radius && angleToPlayer <= angle / 2f)
         {
             Debug.Log("Player in sight");
@@ -51,7 +52,7 @@ public abstract class Enemy : MonoBehaviour
     {
         if (!global)
         {
-            angleDeg += transform.eulerAngles.z;
+            angleDeg += transform.eulerAngles.z+90;
         }
         return new Vector2(Mathf.Cos(angleDeg * Mathf.Deg2Rad), Mathf.Sin(angleDeg * Mathf.Deg2Rad));
     }
