@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
@@ -16,15 +17,17 @@ public abstract class Enemy : MonoBehaviour
     private Mesh mesh;
     Collider2D collisionBox;
 
+    protected Rigidbody2D rb2d;
 
-    private void Start()
+    protected virtual void Awake()
     {
+        rb2d = GetComponent<Rigidbody2D>();
         collisionBox = GetComponent<Collider2D>();
     }
-    private void Update()
+
+    protected virtual void Update()
     {
         checkForPlayer();
-        
     }
 
     public virtual void InflictDamage(int damage)
@@ -44,6 +47,10 @@ public abstract class Enemy : MonoBehaviour
 
     void checkForPlayer()
     {
+        if (!Player)
+        {
+            return;
+        }
         
         Vector2 directionToPlayer = Player.transform.position - transform.position;
         float angleToPlayer = Vector2.Angle(transform.up, directionToPlayer);

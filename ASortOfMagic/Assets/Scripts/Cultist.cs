@@ -1,7 +1,7 @@
 using System;
 using static PizzaBullet.Type;
 
-public class Cultist : Enemy
+public class Cultist : WalkingEnemy
 {
     
     
@@ -31,5 +31,10 @@ public class Cultist : Enemy
             default:
                 throw new ArgumentOutOfRangeException(nameof(bullet), bullet, null);
         }
+    }
+
+    protected void FixedUpdate()
+    {
+        PathToNextPoint();
     }
 }
