@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(Collider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
 public abstract class Enemy : MonoBehaviour
 {
@@ -11,6 +11,7 @@ public abstract class Enemy : MonoBehaviour
 
     public virtual void InflictDamage(int damage)
     {
+        Debug.Log("DamageInflicted");
         health -= damage;
         if (health <= 0)
         {
