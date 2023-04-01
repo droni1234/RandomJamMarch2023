@@ -40,7 +40,7 @@ public abstract class Enemy : MonoBehaviour
     {
         
         Vector2 directionToPlayer = Player.transform.position - transform.position;
-        float angleToPlayer = Vector2.Angle(transform.right, directionToPlayer);
+        float angleToPlayer = Vector2.Angle(transform.up, directionToPlayer);
         if (directionToPlayer.magnitude <= radius && angleToPlayer <= angle / 2f)
         {
             Debug.Log("Player in sight");
