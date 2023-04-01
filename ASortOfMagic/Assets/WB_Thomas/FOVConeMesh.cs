@@ -6,6 +6,7 @@ public class FOVConeMesh : MonoBehaviour
 {
     [SerializeField] Enemy enemy;
     Mesh mesh;
+
     RaycastHit2D hit;
     [SerializeField] float meshRes = 2;
     [HideInInspector] public Vector3[] vertices;
@@ -13,13 +14,23 @@ public class FOVConeMesh : MonoBehaviour
     [HideInInspector] public int stepCount;
     public LayerMask obstacleMask, playerMask;
     Quaternion rotation = Quaternion.Euler(0f, 45f, 0f);
+    [SerializeField] Material materialNormal;
+    [SerializeField] Material materialAlerted;
+    MeshRenderer MeshRend;
+    public bool alerted;
+    Material meshMaterial;
+
 
     // Start is called before the first frame update
     void Start()
     {
         mesh = GetComponent<MeshFilter>().mesh;
+        MeshRend = GetComponent<MeshRenderer>();
+        meshMaterial = GetComponent<MeshRenderer>().material;
         enemy = GetComponentInParent<Enemy>();
         transform.localRotation = enemy.transform.rotation;
+
+        
     }
 
     // Update is called once per frame
@@ -67,13 +78,28 @@ public class FOVConeMesh : MonoBehaviour
                 triangles[i * 3] = i + 2;
             }
         }
+       
 
         mesh.Clear();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
+    }
 
-   
-        
+    public void SetAlert(bool alerted)
+    {
+        if (alerted)
+        {
+            Debug.Log("Alerted");
+            alerted = true;
+            GetComponent<MeshRenderer>().material = materialAlerted;
+
+        }
+        else
+        {
+            Debug.Log("NotAlerted");
+            alerted = false;
+            GetComponent<MeshRenderer>().material = materialNormal;
+        }
     }
 }

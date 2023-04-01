@@ -9,12 +9,18 @@ public abstract class Enemy : MonoBehaviour
     
     public abstract void InflictDamage(PizzaBullet bullet);
     public GameObject Player;
+    public FOVConeMesh SightCone;
     public float radius = 5f;
     public float angle = 180f;
     public int numSegments = 16;
     private Mesh mesh;
+    Collider2D collisionBox;
 
 
+    private void Start()
+    {
+        collisionBox = GetComponent<Collider2D>();
+    }
     private void Update()
     {
         checkForPlayer();
@@ -41,9 +47,19 @@ public abstract class Enemy : MonoBehaviour
         
         Vector2 directionToPlayer = Player.transform.position - transform.position;
         float angleToPlayer = Vector2.Angle(transform.up, directionToPlayer);
-        if (directionToPlayer.magnitude <= radius && angleToPlayer <= angle / 2f)
+
+        collisionBox.enabled= false;
+        RaycastHit2D hit= Physics2D.Raycast(transform.position,directionToPlayer, radius );
+        collisionBox.enabled = true;
+
+        if (directionToPlayer.magnitude <= radius && angleToPlayer <= angle / 2f&& !SightCone.alerted&&hit.collider.tag=="Player")
         {
-            Debug.Log("Player in sight");
+            SightCone.SetAlert(true);
+        }
+        else
+        {
+            SightCone.SetAlert(false);
+
         }
     }
 
