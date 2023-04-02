@@ -25,7 +25,6 @@ public class PizzaBullet : MonoBehaviour
         }
         
         Destroy(gameObject);
-        Debug.Log("Hit2D");
     }
 
     // Update is called once per frame

@@ -1,8 +1,14 @@
 using System;
+using Unity.VisualScripting;
+using UnityEngine;
 using static PizzaBullet.Type;
 
 public class Cultist : WalkingEnemy
 {
+    public int damage = 5;
+
+    public float damageCooldown = 1F;
+    public float damageCooldownTimer;
     
     
     public override void InflictDamage(PizzaBullet bullet)
@@ -13,9 +19,9 @@ public class Cultist : WalkingEnemy
                 InflictDamage(bullet.damage);
                 break;
             case Stealth:
-                if (Gamemaster.instance)
+                if (Gamemaster.Instance)
                 {
-                    if (Gamemaster.instance.stealth)
+                    if (Gamemaster.Instance.stealth)
                     {
                         Die();
                     }
@@ -35,6 +41,17 @@ public class Cultist : WalkingEnemy
 
     protected void FixedUpdate()
     {
-        PathToNextPoint();
+        Pathing();
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+        if (Vector3.Distance(Gamemaster.Instance.player.transform.position, transform.position) <= 0.5F && damageCooldownTimer + damageCooldown < Time.time)
+        {
+            alerted = true;
+            Gamemaster.Instance.player.ReceiveDamage(damage);
+            damageCooldownTimer = Time.time;
+        }
     }
 }

@@ -1,7 +1,8 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(CircleCollider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
 public abstract class Enemy : MonoBehaviour
 {
@@ -14,20 +15,44 @@ public abstract class Enemy : MonoBehaviour
     public float radius = 5f;
     public float angle = 180f;
     public int numSegments = 16;
+
+
+
+    public bool alerted
+    {
+        get => _alerted;
+        set
+        {
+            _alerted = value;
+            if (_alerted)
+            {
+                alertedTimer = Time.time;
+            }
+        }
+    }
+    [SerializeField, ThroughProperty(nameof(alerted)), ]
+    private bool _alerted = false;
     private Mesh mesh;
-    Collider2D collisionBox;
+    protected CircleCollider2D collisionBox;
 
     protected Rigidbody2D rb2d;
+    
+    protected float alertedTimer;
+    public float alertedCooldown = 25F;
 
     protected virtual void Awake()
     {
         rb2d = GetComponent<Rigidbody2D>();
-        collisionBox = GetComponent<Collider2D>();
+        collisionBox = GetComponent<CircleCollider2D>();
     }
 
     protected virtual void Update()
     {
         checkForPlayer();
+        if (Time.time > alertedTimer + alertedCooldown)
+        {
+            alerted = false;
+        }
     }
 
     public virtual void InflictDamage(int damage)
@@ -62,9 +87,12 @@ public abstract class Enemy : MonoBehaviour
         if (directionToPlayer.magnitude <= radius && angleToPlayer <= angle / 2f&& !SightCone.alerted&&hit.collider.tag=="Player")
         {
             SightCone.SetAlert(true);
+            alerted = true;
+            alertedTimer = Time.time;
         }
         else
         {
+            //alerted = false;
             SightCone.SetAlert(false);
 
         }

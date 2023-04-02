@@ -1,22 +1,30 @@
+using System.Dynamic;
+using Unity.Collections;
 using UnityEngine;
 
 public class Gamemaster : MonoBehaviour
 {
 
-    public static Gamemaster instance;
+    private static Gamemaster instance;
+    public static Gamemaster Instance => getInstance();
 
     public bool stealth = true;
 
-    private void Awake() 
+    public PlayerController player;
+
+    public void Death()
     {
-        if(instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(instance);
-        }    
-        else
-        {
-            Destroy(gameObject);
-        }
+        
+    }
+    
+    private static Gamemaster getInstance()
+    {
+        if (instance)
+            return instance;
+        
+        var myGameobject = new GameObject("Gamemaster");
+        instance = myGameobject.AddComponent<Gamemaster>();
+        DontDestroyOnLoad(myGameobject);
+        return instance;
     }
 }
