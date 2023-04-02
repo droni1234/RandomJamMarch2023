@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEditor;
 using UnityEngine;
 
 public class PathPoint : MonoBehaviour
@@ -14,6 +15,11 @@ public class PathPoint : MonoBehaviour
         get => _NextPathPoint;
         set
         {
+            EditorUtility.SetDirty(this);
+            if(_NextPathPoint)
+                EditorUtility.SetDirty(_NextPathPoint);
+            if(_LastPathPoint)
+                EditorUtility.SetDirty(_LastPathPoint);
             if (_NextPathPoint)
             {
                 if (value == null)
@@ -41,6 +47,11 @@ public class PathPoint : MonoBehaviour
         get => _LastPathPoint;
         set
         {
+            EditorUtility.SetDirty(this);
+            if(_NextPathPoint)
+                EditorUtility.SetDirty(_NextPathPoint);
+            if(_LastPathPoint)
+                EditorUtility.SetDirty(_LastPathPoint);
             if (_LastPathPoint)
             {
                 if (value == null)
