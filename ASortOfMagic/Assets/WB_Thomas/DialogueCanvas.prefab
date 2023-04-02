@@ -541,8 +541,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   popUpBox: {fileID: 6317726582777283488}
+  imageBox: {fileID: 6317726583144884070}
   popUpAnimator: {fileID: 6317726582777283514}
   popUpText: {fileID: 6317726582605776540}
+  defaultSprite: {fileID: 0}
 --- !u!1 &6317726583144884070
 GameObject:
   m_ObjectHideFlags: 0
