@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,9 +19,14 @@ public class PlayerController : MonoBehaviour
 
     Vector2 mousePosition;
     // Start is called before the first frame update
-    void Awake()
+    void OnEnable()
     {
         Gamemaster.Instance.player = this;
+    }
+
+    private void OnDisable()
+    { 
+        Gamemaster.Instance.player = null;
     }
 
     // Update is called once per frame

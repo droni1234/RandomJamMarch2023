@@ -27,6 +27,13 @@ public abstract class Enemy : MonoBehaviour
             if (_alerted)
             {
                 alertedTimer = Time.time;
+                angle = 150F;
+                radius = 10F;
+            }
+            else
+            {
+                radius = 12F;
+                angle = 50F;
             }
         }
     }
@@ -70,11 +77,11 @@ public abstract class Enemy : MonoBehaviour
         Destroy(gameObject);
     }
 
-    void checkForPlayer()
+    protected bool isInSight()
     {
         if (!Player)
         {
-            return;
+            return false;
         }
         
         Vector2 directionToPlayer = Player.transform.position - transform.position;
@@ -83,8 +90,15 @@ public abstract class Enemy : MonoBehaviour
         collisionBox.enabled= false;
         RaycastHit2D hit= Physics2D.Raycast(transform.position,directionToPlayer, radius );
         collisionBox.enabled = true;
-
-        if (directionToPlayer.magnitude <= radius && angleToPlayer <= angle / 2f&& !SightCone.alerted&&hit.collider.tag=="Player")
+        
+        return directionToPlayer.magnitude <= radius && angleToPlayer <= angle / 2f && !SightCone.alerted &&
+               hit.collider.tag == "Player";
+    }
+    
+    
+    void checkForPlayer()
+    {
+        if (isInSight())
         {
             SightCone.SetAlert(true);
             alerted = true;

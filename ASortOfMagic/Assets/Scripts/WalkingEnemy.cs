@@ -1,7 +1,9 @@
+using System;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 public abstract class WalkingEnemy : Enemy
 {
@@ -19,6 +21,13 @@ public abstract class WalkingEnemy : Enemy
     private MultiPathPoint currentMultiPath;
     private float proximityDelta = 1.0F;
     
+    public float followingCoolDown = 4.0F;
+    private float followingTimer = float.NegativeInfinity;
+
+    private Vector3 lastPlayerPos;
+
+
+    private const int PLAYERMASK = 1<<8;
 
 
     protected override void Awake()
@@ -29,6 +38,7 @@ public abstract class WalkingEnemy : Enemy
 
     protected void Pathing()
     {
+        rb2d.velocity = Vector2.zero;
         if (alerted)
         {
             speed = baseSpeed * 1.5F;
@@ -49,44 +59,78 @@ public abstract class WalkingEnemy : Enemy
         }
     }
 
-    protected void PathToNextWayPoint()
+    private void skipWayPoints()
     {
-        if (currentWayPoint == null) {return;}
-        if (!checkIfReachableDirectlyByDistance(currentWayPoint.transform))
+        var saveCurrent = currentWayPoint;
+        do
+        {
+            setNextPathPoint();
+        } while (saveCurrent != currentWayPoint && !checkIfReachableDirectlyByDistance(currentWayPoint.transform));
+
+        if (saveCurrent == currentWayPoint)
         {
             onMultiPath = true;
             currentMultiPath = findMultiPathPointInReach();
+            //Insert here HMMM sound??
         }
-        
+    }
+    
+    protected void PathToNextWayPoint()
+    {
+        speed = baseSpeed;
         if (checkProximity(transform, currentWayPoint.transform))
         {
             setNextPathPoint();
+        } else if (!checkIfReachableDirectlyByDistance(currentWayPoint.transform, PLAYERMASK))
+        {
+            skipWayPoints();
         }
-
-        moveTowards(currentWayPoint.transform);
+        else
+        {
+            moveTowards(currentWayPoint.transform);
+        }
     }
 
     protected void ToPlayerPathing()
     {
-        if (checkIfReachableDirectlyByDistance(Gamemaster.Instance.player.transform))
+        // if (checkProximity(transform.position, lastPlayerPos, orientationPuffer))
+        //     followingTimer = Single.NegativeInfinity;
+        if (isInSight())
         {
-            alerted = true;
             onMultiPath = false;
+            lastPlayerPos = Gamemaster.Instance.player.transform.position;
             moveTowards(Gamemaster.Instance.player.transform);
+            followingTimer = Time.time;
+            return;
+
         }
-        else if (onMultiPath == false)
+        if (Time.time <= followingTimer + followingCoolDown && checkIfReachableDirectlyByDistance(Gamemaster.Instance.player.transform, PLAYERMASK))
+        {
+            onMultiPath = false;
+            lastPlayerPos = Gamemaster.Instance.player.transform.position;
+            moveTowards(Gamemaster.Instance.player.transform);
+            return;
+        }
+        if (Time.time <= followingTimer + followingCoolDown && !checkProximity(transform.position, lastPlayerPos, orientationPuffer) && checkIfReachableDirectlyByDistance(lastPlayerPos))
+        {
+            moveTowards(lastPlayerPos);
+            if (checkProximity(transform.position, lastPlayerPos, orientationPuffer))
+                followingTimer = Single.NegativeInfinity;
+            return;
+        }
+        if (Time.time > followingTimer + followingCoolDown && onMultiPath == false)
         {
             onMultiPath = true;
             currentMultiPath = findMultiPathPointInReach();
         }
-
         TraverseRandomWaypoints();
     }
 
     protected void ToWayPointPathing()
     {
-        if (checkIfReachableDirectlyByDistance(currentWayPoint.transform))
+        if (checkIfReachableDirectlyByDistance(currentWayPoint.transform, PLAYERMASK))
         {
+            moveTowards(currentWayPoint);
             onMultiPath = false;
             return;
         }
@@ -102,7 +146,7 @@ public abstract class WalkingEnemy : Enemy
 
     private void TraverseRandomWaypoints()
     {
-        if (currentMultiPath == null || !onMultiPath)
+        if (currentMultiPath == null)
         {
             onMultiPath = false;
             return;
@@ -115,7 +159,13 @@ public abstract class WalkingEnemy : Enemy
         }
         else
         {
-            moveTowards(currentMultiPath.transform);
+            if (!checkIfReachableDirectlyByDistance(currentMultiPath.transform, PLAYERMASK))
+            {
+                onMultiPath = true;
+                currentMultiPath = findMultiPathPointInReach();
+            }
+            
+            moveTowards(currentMultiPath);
         }
     }
     
@@ -123,7 +173,7 @@ public abstract class WalkingEnemy : Enemy
     {
         foreach (var point in GameObject.FindGameObjectsWithTag("MultiPath"))
         {
-            if (checkIfReachableDirectlyByDistance(point.transform))
+            if (checkIfReachableDirectlyByDistance(point.transform, PLAYERMASK))
             {
                 return point.GetComponent<MultiPathPoint>();
             }
@@ -131,34 +181,52 @@ public abstract class WalkingEnemy : Enemy
 
         return null;
     }
-    
-    private bool checkIfReachableDirectlyByDistance(Transform other)
-    {
-        float puffer = (collisionBox.radius + orientationPuffer);
-        Vector3 distance = (other.position - transform.position);
-        
-        RaycastHit2D hit = Physics2D.CircleCast(transform.position, collisionBox.radius, distance, raycastCap);
 
-        Debug.DrawLine(transform.position, transform.position + distance.normalized * (hit.distance + puffer), Color.red, 0.1F);
-        
-        return hit.distance + puffer > distance.magnitude || hit.collider == null;
+    private bool checkIfReachableDirectlyByDistance(Transform other, int layer = 1 << 2)
+    {
+        return checkIfReachableDirectlyByDistance(other.position, layer);
     }
 
-    private bool checkProximity(Transform pointA, Transform pointB)
+    private bool checkIfReachableDirectlyByDistance(Vector3 other, int layer = 1<<2)
+    {
+        Vector2 distance = (new Vector2(other.x, other.y) - rb2d.position);
+        
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, distance, raycastCap, ~(layer | 1<<2));
+
+        Debug.DrawLine(transform.position, rb2d.position + distance.normalized * (hit.distance + orientationPuffer), Color.red, 0.1F);
+        
+        return hit.collider == null || hit.distance + orientationPuffer > distance.magnitude;
+    }
+
+    private bool checkProximity(Vector3 pointA, Vector3 pointB)
     {
         return checkProximity(pointA, pointB, proximityDelta);
     }
     
-    private bool checkProximity(Transform pointA, Transform pointB, float delta)
+    private bool checkProximity(Transform pointA, Transform pointB)
     {
-        return Vector2.Distance(pointA.position, pointB.position) <= delta;
+        return checkProximity(pointA.position, pointB.position, proximityDelta);
     }
     
-    private void moveTowards(Transform target)
+    private bool checkProximity(Vector3 pointA, Vector3 pointB, float delta)
     {
-        direction = (target.position - transform.position).normalized;
+        return Vector2.Distance(pointA, pointB) <= delta;
+    }
+
+    private void moveTowards(Component target)
+    {
+        if (target == null)
+            return;
+        moveTowards(target.transform.position);
+    }
+
+    private void moveTowards(Vector3 target)
+    {
+        if (checkProximity(transform.position, target))
+            return;
+        direction = (new Vector2(target.x, target.y) - rb2d.position).normalized;
         transform.up = direction;
-        rb2d.MovePosition(rb2d.position + direction.normalized * (speed * Time.fixedDeltaTime));
+        rb2d.velocity = (direction.normalized * (speed * Time.fixedDeltaTime) * 100);
     }
     
     private void setNextPathPoint()
